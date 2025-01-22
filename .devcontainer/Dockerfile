@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.1-devel-ubuntu22.04
+FROM ubuntu:jammy
 
 ARG WORKSPACE
 ENV WORKSPACE=${WORKSPACE}
@@ -36,6 +36,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     software-properties-common \
     vim \
     wget \
+    iputils-ping \
     && rm -rf /var/lib/apt/lists/* \
     && locale-gen en_US.UTF-8; dpkg-reconfigure -f noninteractive locales
 
@@ -107,6 +108,11 @@ RUN curl -L -o libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-c
 ENV Torch_DIR=/usr/local/lib/libtorch
 ENV CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
 
+WORKDIR /home
+RUN git clone https://github.com/PPI-PUT/intention_ws.git \
+    && cd intention_ws \
+    && vcs import < deps.repos \
+    && colcon build --packages-up-to --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On -Wall -Wextra -Wpedantic
 # set up entrypoint
 COPY entrypoint /entrypoint
 ENTRYPOINT ["/entrypoint"]
